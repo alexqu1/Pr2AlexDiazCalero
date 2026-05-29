@@ -1,0 +1,62 @@
+# =========================
+# NODE / NPM
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# BUILD / OUTPUT
+# =========================
+dist/
+build/
+out/
+
+# =========================
+# CAPACITOR / ANDROID
+# =========================
+android/
+ios/
+capacitor-cordova-android-plugins/
+
+# builds de Android
+**/build/
+**/caches/
+**/.gradle/
+
+# =========================
+# CAPACITOR
+# =========================
+capacitor.config.json
+capacitor.config.ts
+
+# =========================
+# IDEs
+# =========================
+.vscode/
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+
+# =========================
+# SYSTEM
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# LOGS / CACHE
+# =========================
+*.log
+caches/
+cache/
+wrapper/dists/
+# =========================
+# ENV FILES
+# =========================
+.env
+.env.local
+.env.*.local
