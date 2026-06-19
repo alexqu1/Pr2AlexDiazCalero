@@ -10,7 +10,7 @@ new p5((p) => {
   let selected = null;
   let sound;
 
-  const API_KEY = "Aqui  iria el numero de api key";
+  const API_KEY = "Aqui  iria el numero de api key que dejo en el txt";
 
   // ---------------- CONFIG (LOCALSTORAGE) ----------------
   let planetSize =
