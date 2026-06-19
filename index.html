@@ -1,13 +1,52 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>bibliotecaalex</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BibliotecaAlex</title>
+</head>
+
+<body>
+
+  <div id="app"></div>
+
+  <!-- BOTÓN CONFIGURACIÓN -->
+  <button id="settingsBtn">⚙️</button>
+
+  <!-- PANEL CONFIGURACIÓN -->
+  <div id="settingsPanel" class="hidden">
+
+    <h3>Configuración</h3>
+
+    <label>
+      <input
+        type="checkbox"
+        id="showStars"
+        checked
+      >
+      Mostrar estrellas
+    </label>
+
+    <br><br>
+
+    <label>
+      Tamaño de planetas
+    </label>
+
+    <br>
+
+    <input
+      type="range"
+      id="planetSize"
+      min="70"
+      max="130"
+      value="85"
+    >
+
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+
+</body>
 </html>

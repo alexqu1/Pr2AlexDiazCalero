@@ -4,21 +4,28 @@ import { Haptics } from '@capacitor/haptics';
 
 new p5((p) => {
 
-  let games = [
-    { name: "Zelda", type: "Aventura", desc: "Explora mundos y puzzles", color: [80, 200, 255] },
-    { name: "Mario", type: "Plataformas", desc: "Salta niveles clásicos", color: [255, 80, 80] },
-    { name: "Tetris", type: "Puzzle", desc: "Encaja piezas sin parar", color: [80, 255, 120] },
-    { name: "Pacman", type: "Arcade", desc: "Come puntos y evita fantasmas", color: [255, 220, 80] },
-    { name: "Batman", type: "Arcade", desc: "Derrota malos y Delicuentes ", color: [55, 220, 80] }
-  ];
-
+  let games = [];
   let planets = [];
   let stars = [];
   let selected = null;
   let sound;
 
-  const SIZE = 85;
-  const MARGIN = SIZE;
+  const API_KEY = "Aqui  iria el numero de api key";
+
+  // ---------------- CONFIG (LOCALSTORAGE) ----------------
+  let planetSize =
+    Number(localStorage.getItem("planetSize")) || 85;
+
+  let showStars =
+    localStorage.getItem("showStars") !== "false";
+
+  // ---------------- UTIL TEXTO ----------------
+  function fitText(txt, maxChars) {
+    if (!txt) return "";
+    return txt.length > maxChars
+      ? txt.slice(0, maxChars) + "..."
+      : txt;
+  }
 
   function getLastMonthName() {
     const d = new Date();
@@ -26,6 +33,7 @@ new p5((p) => {
     return d.toLocaleString('es-ES', { month: 'long' });
   }
 
+  // ---------------- STARS ----------------
   class Star {
     constructor() {
       this.reset();
@@ -53,21 +61,60 @@ new p5((p) => {
     }
   }
 
+  // ---------------- PLANETS ----------------
   class Planet {
     constructor(game) {
       this.game = game;
 
-      this.baseX = p.random(MARGIN, p.width - MARGIN);
-      this.baseY = p.random(MARGIN, p.height - MARGIN);
+      this.baseX = p.random(85, p.width - 85);
+      this.baseY = p.random(85, p.height - 85);
 
       this.x = this.baseX;
       this.y = this.baseY;
 
-      this.tx = this.x;
-      this.ty = this.y;
-
       this.noiseOffsetX = p.random(1000);
       this.noiseOffsetY = p.random(4000);
+    }
+
+    draw() {
+      this.update();
+
+      let size =
+        selected === this
+          ? planetSize + 30
+          : planetSize;
+
+      // 🔥 glow
+      p.drawingContext.shadowBlur = 25;
+      p.drawingContext.shadowColor =
+        `rgb(${this.game.color[0]},${this.game.color[1]},${this.game.color[2]})`;
+
+      // 🎨 degradado simple
+      for (let i = size; i > 0; i -= 4) {
+
+        let alpha = p.map(i, 0, size, 30, 255);
+
+        p.fill(
+          this.game.color[0],
+          this.game.color[1],
+          this.game.color[2],
+          alpha
+        );
+
+        p.noStroke();
+        p.circle(this.x, this.y, i);
+      }
+
+      p.drawingContext.shadowBlur = 0;
+
+      // 📝 texto blanco
+      p.fill(255);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.textSize(11);
+      p.text(fitText(this.game.name, 12), this.x, this.y);
+
+      p.textSize(10);
+      p.text("⭐ " + this.game.rating.toFixed(1), this.x, this.y + 18);
     }
 
     update() {
@@ -78,11 +125,11 @@ new p5((p) => {
         targetX = this.baseX;
         targetY = this.baseY;
       } else {
-        if (selected === this) {
-          targetX = p.width * 0.25;
-        } else {
-          targetX = p.width * 0.75;
-        }
+        targetX =
+          selected === this
+            ? p.width * 0.25
+            : p.width * 0.75;
+
         targetY = this.baseY;
       }
 
@@ -96,33 +143,50 @@ new p5((p) => {
       this.y += ((targetY + floatY) - this.y) * 0.08;
     }
 
-    draw() {
-      this.update();
-
-      p.noStroke();
-      p.fill(this.game.color);
-
-      p.circle(this.x, this.y, selected === this ? SIZE + 20 : SIZE);
-
-      p.fill(0);
-      p.textAlign(p.CENTER);
-      p.textSize(12);
-      p.text(this.game.name, this.x, this.y + 4);
-    }
-
     hit(mx, my) {
-      return p.dist(mx, my, this.x, this.y) < SIZE / 2;
+      return p.dist(mx, my, this.x, this.y) < planetSize / 2;
     }
   }
 
-  p.setup = () => {
-    const canvas = p.createCanvas(window.innerWidth, window.innerHeight);
+  // ---------------- API ----------------
+  async function loadTopGames() {
+    try {
+      const res = await fetch(
+        `https://corsproxy.io/?https://api.rawg.io/api/games?key=${API_KEY}&page_size=5&ordering=-rating`
+      );
+
+      const data = await res.json();
+
+      games = data.results.map(g => ({
+        name: g.name,
+        type: g.genres?.[0]?.name || "Sin categoría",
+        rating: g.rating || 0,
+        color: [
+          Math.random() * 255,
+          Math.random() * 255,
+          Math.random() * 255
+        ]
+      }));
+
+      planets = games.map(g => new Planet(g));
+      selected = null;
+
+    } catch (err) {
+      console.log("Fallback");
+    }
+  }
+
+  // ---------------- SETUP ----------------
+  p.setup = async () => {
+
+    const canvas = p.createCanvas(
+      window.innerWidth,
+      window.innerHeight
+    );
 
     canvas.elt.style.position = "fixed";
     canvas.elt.style.top = "0";
     canvas.elt.style.left = "0";
-    canvas.elt.style.width = "100vw";
-    canvas.elt.style.height = "100vh";
 
     sound = new Audio(window.location.origin + '/sound.mp3');
 
@@ -130,21 +194,50 @@ new p5((p) => {
       stars.push(new Star());
     }
 
-    for (let i = 0; i < games.length; i++) {
-      planets.push(new Planet(games[i]));
-    }
+    await loadTopGames();
+
+    // ⚙️ DOM SETTINGS
+    const btn =
+      document.getElementById("settingsBtn");
+
+    const panel =
+      document.getElementById("settingsPanel");
+
+    btn.onclick = () => {
+      panel.classList.toggle("hidden");
+    };
+
+    const starCheck =
+      document.getElementById("showStars");
+
+    starCheck.checked = showStars;
+
+    starCheck.onchange = () => {
+      showStars = starCheck.checked;
+      localStorage.setItem("showStars", showStars);
+    };
+
+    const sizeSlider =
+      document.getElementById("planetSize");
+
+    sizeSlider.value = planetSize;
+
+    sizeSlider.oninput = () => {
+      planetSize = Number(sizeSlider.value);
+      localStorage.setItem("planetSize", planetSize);
+    };
   };
 
-  p.windowResized = () => {
-    p.resizeCanvas(window.innerWidth, window.innerHeight);
-  };
-
+  // ---------------- DRAW ----------------
   p.draw = () => {
+
     p.background(5, 5, 20);
 
-    for (let s of stars) {
-      s.update();
-      s.draw();
+    if (showStars) {
+      for (let s of stars) {
+        s.update();
+        s.draw();
+      }
     }
 
     p.fill(0, 255, 150);
@@ -152,7 +245,8 @@ new p5((p) => {
     p.textSize(26);
 
     p.text(
-      "TOP 5 JUEGOS - " + getLastMonthName().toUpperCase(),
+      "TOP 5 JUEGOS - " +
+      getLastMonthName().toUpperCase(),
       p.width / 2,
       40
     );
@@ -168,11 +262,10 @@ new p5((p) => {
     if (!selected) return;
 
     let g = selected.game;
-    let h = 100;
 
     p.noStroke();
     p.fill(0, 0, 0, 180);
-    p.rect(0, p.height - h, p.width, h);
+    p.rect(0, p.height - 100, p.width, 100);
 
     p.fill(255);
     p.textAlign(p.LEFT);
@@ -183,15 +276,17 @@ new p5((p) => {
     p.textSize(12);
     p.text("Tipo: " + g.type, 20, p.height - 40);
 
-    p.text(g.desc, 20, p.height - 20, p.width - 40);
+    p.text("⭐ Rating: " + g.rating, 20, p.height - 20);
   }
 
+  // ---------------- INPUT ----------------
   p.mousePressed = async () => {
 
     for (let pl of planets) {
       if (pl.hit(p.mouseX, p.mouseY)) {
 
-        selected = (selected === pl) ? null : pl;
+        selected =
+          selected === pl ? null : pl;
 
         try {
           sound.currentTime = 0;
@@ -205,8 +300,6 @@ new p5((p) => {
         break;
       }
     }
-
-    return false;
   };
 
 });
