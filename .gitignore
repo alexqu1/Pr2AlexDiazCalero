@@ -53,7 +53,7 @@ Thumbs.db
 *.log
 caches/
 cache/
-wrapper/dists/
+
 # =========================
 # ENV FILES
 # =========================
